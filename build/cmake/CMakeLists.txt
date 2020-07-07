@@ -2,10 +2,11 @@ if ( NOT DEFINED CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE Release CACHE STRING "Build type" )
 endif ()
 
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 project (glew)
 
 cmake_minimum_required (VERSION 2.4)
-include (flags OPTIONAL)
+endif()
 
 if (COMMAND cmake_policy)
   cmake_policy (SET CMP0003 NEW)
