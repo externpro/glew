@@ -8,6 +8,8 @@ project (glew)
 cmake_minimum_required (VERSION 2.4)
 endif()
 
+include(GNUInstallDirs)
+
 if (COMMAND cmake_policy)
   cmake_policy (SET CMP0003 NEW)
 endif()
@@ -28,14 +30,6 @@ string (REGEX REPLACE "GLEW_MINOR[ ]*=[ ]*([0-9]+)" "\\1" CPACK_PACKAGE_VERSION_
 file (STRINGS ${GLEW_DIR}/config/version  _VERSION_PATCH_STRING REGEX "GLEW_MICRO[ ]*=[ ]*[0-9]+.*")
 string (REGEX REPLACE "GLEW_MICRO[ ]*=[ ]*([0-9]+)" "\\1" CPACK_PACKAGE_VERSION_PATCH ${_VERSION_PATCH_STRING})
 set (GLEW_VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
-
-if (DEFINED GLEW_VER)
-  if (NOT ${GLEW_VER} STREQUAL ${GLEW_VERSION})
-    message (AUTHOR_WARNING "version passed in (${GLEW_VER}) doesn't match version from config/version (${GLEW_VERSION})")
-  endif ()
-  set (ver _${GLEW_VERSION})
-  set (verDir /${PROJECT_NAME}${ver})
-endif ()
 
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -58,14 +52,14 @@ include_directories (${GLEW_DIR}/include)
 add_library (glew SHARED ${GLEW_DIR}/src/glew.c)
 set_target_properties (glew PROPERTIES COMPILE_DEFINITIONS "GLEW_BUILD" OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX "${DLL_PREFIX}")
 add_library (glew_s STATIC ${GLEW_DIR}/src/glew.c)
-set_target_properties (glew_s PROPERTIES COMPILE_DEFINITIONS "GLEW_STATIC" OUTPUT_NAME "${GLEW_LIB_NAME}${ver}" PREFIX lib)
+set_target_properties (glew_s PROPERTIES COMPILE_DEFINITIONS "GLEW_STATIC" OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX lib)
 target_link_libraries (glew ${GLEW_LIBRARIES})
 target_link_libraries (glew_s ${GLEW_LIBRARIES})
 
 add_library(glewmx SHARED ${GLEW_DIR}/src/glew.c )
 set_target_properties (glewmx PROPERTIES COMPILE_DEFINITIONS "GLEW_BUILD;GLEW_MX" OUTPUT_NAME "${GLEW_LIB_NAME}mx" PREFIX "${DLL_PREFIX}")
 add_library(glewmx_s STATIC ${GLEW_DIR}/src/glew.c )
-set_target_properties (glewmx_s PROPERTIES COMPILE_DEFINITIONS "GLEW_STATIC;GLEW_MX" OUTPUT_NAME "${GLEW_LIB_NAME}mx${ver}" PREFIX lib)
+set_target_properties (glewmx_s PROPERTIES COMPILE_DEFINITIONS "GLEW_STATIC;GLEW_MX" OUTPUT_NAME "${GLEW_LIB_NAME}mx" PREFIX lib)
 target_link_libraries (glewmx ${GLEW_LIBRARIES})
 target_link_libraries (glewmx_s ${GLEW_LIBRARIES})
 
@@ -76,7 +70,7 @@ else()
   target_compile_definitions(glewmx INTERFACE "GLEW_MX")
   target_compile_definitions(glewmx_s INTERFACE "GLEW_STATIC;GLEW_MX")
   foreach(t glew glew_s glewmx glewmx_s)
-    target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:include${verDir}>)
+    target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   endforeach()
   set(MAYBE_EXPORT EXPORT glew-targets)
 endif()
@@ -92,9 +86,9 @@ endif()
 
 install ( TARGETS ${targets_to_install}
           ${MAYBE_EXPORT}
-          RUNTIME DESTINATION bin
-          LIBRARY DESTINATION lib${LIB_SUFFIX}
-          ARCHIVE DESTINATION lib${LIB_SUFFIX}
+          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 if (BUILD_UTILS)
@@ -105,7 +99,7 @@ if (BUILD_UTILS)
   target_link_libraries (visualinfo glew)
 
   install ( TARGETS glewinfo visualinfo
-            DESTINATION bin)
+            DESTINATION ${CMAKE_INSTALL_BINDDIR})
 endif ()
 
 set (prefix ${CMAKE_INSTALL_PREFIX})
@@ -125,7 +119,7 @@ configure_file (${GLEW_DIR}/glew.pc.in ${GLEW_DIR}/glewmx.pc @ONLY)
 option (INSTALL_PKGCONFIG "pkgconfig install" ON)
 if (INSTALL_PKGCONFIG)
   install(FILES ${GLEW_DIR}/glew.pc ${GLEW_DIR}/glewmx.pc
-          DESTINATION lib/pkgconfig
+          DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig
   )
 endif ()
 
@@ -133,13 +127,16 @@ install (FILES
     ${GLEW_DIR}/include/GL/wglew.h
     ${GLEW_DIR}/include/GL/glew.h
     ${GLEW_DIR}/include/GL/glxew.h
-    DESTINATION include${verDir}/GL)
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/GL)
 
 if(MAYBE_EXPORT)
-  install(EXPORT glew-targets DESTINATION lib/cmake/glew${ver}
+  if(NOT DEFINED XP_INSTALL_CMAKEDIR)
+    set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake/glew)
+  endif()
+  install(EXPORT glew-targets DESTINATION ${XP_INSTALL_CMAKEDIR}
     NAMESPACE GLEW::)
   install(FILES
       ${CMAKE_CURRENT_SOURCE_DIR}/glew-config.cmake
       ${CMAKE_CURRENT_SOURCE_DIR}/CopyImportedTargetProperties.cmake
-    DESTINATION lib/cmake/glew${ver})
+    DESTINATION ${XP_INSTALL_CMAKEDIR})
 endif()
