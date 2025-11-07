@@ -10,7 +10,7 @@
 use strict;
 use warnings;
 
-do 'bin/make.pl';
+do './bin/make.pl';
 
 # function pointer declaration
 sub make_pfn_decl($%)
