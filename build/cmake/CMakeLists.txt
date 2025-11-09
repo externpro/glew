@@ -43,7 +43,13 @@ else ()
 endif ()
 
 find_package (OpenGL REQUIRED)
-set (GLEW_LIBRARIES ${OPENGL_LIBRARIES})
+if(TARGET OpenGL::GL)
+  set (GLEW_LIBRARIES OpenGL::GL)
+elseif(APPLE)
+  set (GLEW_LIBRARIES "-framework OpenGL")
+else()
+  set (GLEW_LIBRARIES ${OPENGL_LIBRARIES})
+endif()
 
 add_definitions (-DGLEW_NO_GLU)
 
