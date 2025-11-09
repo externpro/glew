@@ -43,7 +43,13 @@ else ()
 endif ()
 
 find_package (OpenGL REQUIRED)
-set (GLEW_LIBRARIES ${OPENGL_LIBRARIES})
+if(TARGET OpenGL::GL)
+  set (GLEW_LIBRARIES OpenGL::GL)
+elseif(APPLE)
+  set (GLEW_LIBRARIES "-framework OpenGL")
+else()
+  set (GLEW_LIBRARIES ${OPENGL_LIBRARIES})
+endif()
 
 add_definitions (-DGLEW_NO_GLU)
 
@@ -63,6 +69,7 @@ set_target_properties (glewmx_s PROPERTIES COMPILE_DEFINITIONS "GLEW_STATIC;GLEW
 target_link_libraries (glewmx ${GLEW_LIBRARIES})
 target_link_libraries (glewmx_s ${GLEW_LIBRARIES})
 
+set(targetsFile ${PROJECT_NAME}-targets)
 if(CMAKE_VERSION VERSION_LESS 2.8.12)
   set(MAYBE_EXPORT "")
 else()
@@ -72,7 +79,7 @@ else()
   foreach(t glew glew_s glewmx glewmx_s)
     target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   endforeach()
-  set(MAYBE_EXPORT EXPORT glew-targets)
+  set(MAYBE_EXPORT EXPORT ${targetsFile})
 endif()
 
 set(targets_to_install "")
@@ -83,6 +90,17 @@ endif()
 if(NOT DEFINED BUILD_SHARED_LIBS OR NOT BUILD_SHARED_LIBS)
   list(APPEND targets_to_install glew_s glewmx_s)
 endif()
+
+string(JOIN "\n" EXT1
+  "find_package(OpenGL REQUIRED) # depends on OpenGL::GL"
+  ""
+  )
+set(libs ${targets_to_install})
+list(TRANSFORM libs PREPEND "GLEW::")
+if(NOT DEFINED XP_INSTALL_CMAKEDIR)
+  set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
+endif()
+xpPackageDevel(TARGETS_FILE ${targetsFile} LIBRARIES ${libs})
 
 install ( TARGETS ${targets_to_install}
           ${MAYBE_EXPORT}
@@ -130,10 +148,7 @@ install (FILES
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/GL)
 
 if(MAYBE_EXPORT)
-  if(NOT DEFINED XP_INSTALL_CMAKEDIR)
-    set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake/glew)
-  endif()
-  install(EXPORT glew-targets DESTINATION ${XP_INSTALL_CMAKEDIR}
+  install(EXPORT ${targetsFile} DESTINATION ${XP_INSTALL_CMAKEDIR}
     NAMESPACE GLEW::)
   install(FILES
       ${CMAKE_CURRENT_SOURCE_DIR}/glew-config.cmake
