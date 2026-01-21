@@ -90,16 +90,24 @@ if(NOT DEFINED BUILD_SHARED_LIBS OR NOT BUILD_SHARED_LIBS)
   list(APPEND targets_to_install glew_s glewmx_s)
 endif()
 
-string(JOIN "\n" EXT1
-  "find_package(OpenGL REQUIRED) # depends on OpenGL::GL"
-  ""
-  )
-set(libs ${targets_to_install})
-list(TRANSFORM libs PREPEND "GLEW::")
-if(NOT DEFINED XP_INSTALL_CMAKEDIR)
-  set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
+set(CMAKE_NAMESPACE GLEW)
+if(DEFINED XP_NAMESPACE)
+  string(JOIN "\n" EXT1
+    "find_package(OpenGL REQUIRED) # depends on OpenGL::GL"
+    ""
+    )
+  xpExternPackage(NAMESPACE ${XP_NAMESPACE} ALIAS_NAMESPACE ${CMAKE_NAMESPACE}
+    TARGETS_FILE ${targetsFile} LIBRARIES ${targets_to_install}
+    BASE ${CMAKE_PROJECT_NAME}-${GLEW_VERSION} XPDIFF "patch"
+    WEB "http://glew.sourceforge.net" UPSTREAM "github.com/nigels-com/glew"
+    DESC "The OpenGL Extension Wrangler Library"
+    LICENSE "[MIT](https://github.com/nigels-com/glew/blob/master/LICENSE.txt 'Modified BSD, Mesa 3D (renamed X11/MIT), Khronos (renamed X11/MIT)')"
+    )
+  set(CMAKE_NAMESPACE ${XP_NAMESPACE})
+  set(CMAKE_INSTALL_CMAKEDIR ${XP_INSTALL_CMAKEDIR})
+elseif(NOT DEFINED CMAKE_INSTALL_CMAKEDIR)
+  set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
 endif()
-xpPackageDevel(TARGETS_FILE ${targetsFile} LIBRARIES ${libs})
 
 install ( TARGETS ${targets_to_install}
           ${MAYBE_EXPORT}
@@ -147,10 +155,10 @@ install (FILES
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/GL)
 
 if(MAYBE_EXPORT)
-  install(EXPORT ${targetsFile} DESTINATION ${XP_INSTALL_CMAKEDIR}
-    NAMESPACE GLEW::)
+  install(EXPORT ${targetsFile} DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
+    NAMESPACE ${CMAKE_NAMESPACE}::)
   install(FILES
       ${CMAKE_CURRENT_SOURCE_DIR}/glew-config.cmake
       ${CMAKE_CURRENT_SOURCE_DIR}/CopyImportedTargetProperties.cmake
-    DESTINATION ${XP_INSTALL_CMAKEDIR})
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 endif()
