@@ -8,7 +8,8 @@
       "cacheVariables": {
         "BUILD_SHARED_LIBS": "OFF",
         "BUILD_UTILS": "OFF",
-        "INSTALL_PKGCONFIG": "OFF"
+        "INSTALL_PKGCONFIG": "OFF",
+        "XP_NAMESPACE": "xpro"
       }
     }
   ],
