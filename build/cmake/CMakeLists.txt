@@ -104,7 +104,6 @@ if(DEFINED XP_NAMESPACE)
     LICENSE "[MIT](https://github.com/nigels-com/glew/blob/master/LICENSE.txt 'Modified BSD, Mesa 3D (renamed X11/MIT), Khronos (renamed X11/MIT)')"
     )
   set(CMAKE_NAMESPACE ${XP_NAMESPACE})
-  set(CMAKE_INSTALL_CMAKEDIR ${XP_INSTALL_CMAKEDIR})
 elseif(NOT DEFINED CMAKE_INSTALL_CMAKEDIR)
   set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
 endif()
