@@ -9,8 +9,8 @@ if(GIT_RESULT)
   message(FATAL_ERROR "Failed to get git tag: ${GIT_RESULT}")
 endif()
 # Extract just the version number (X.Y.Z) from the git tag
-# Handles both 'glew-X.Y.Z' and 'vX.Y.Z' formats by stripping the prefix
-string(REGEX REPLACE "^(glew-|v)([0-9]+\\.[0-9]+\\.[0-9]+).*$" "\\2" GLEW_VERSION "${GIT_TAG}")
+# Handles multiple formats: '[glew-|v|xpv]X.Y.Z' by stripping the prefix
+string(REGEX REPLACE "^(glew-|v|xpv)([0-9]+\\.[0-9]+\\.[0-9]+).*$" "\\2" GLEW_VERSION "${GIT_TAG}")
 message(STATUS "Git tag: ${GIT_TAG}")
 message(STATUS "Extracted GLEW version: ${GLEW_VERSION}")
 # Set up download URL and target directory for the GLEW source tarball
