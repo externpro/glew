@@ -90,20 +90,23 @@ if(NOT DEFINED BUILD_SHARED_LIBS OR NOT BUILD_SHARED_LIBS)
   list(APPEND targets_to_install glew_s glewmx_s)
 endif()
 
-set(CMAKE_NAMESPACE GLEW)
-if(DEFINED XP_NAMESPACE)
-  string(JOIN "\n" EXT1
-    "find_package(OpenGL REQUIRED) # depends on OpenGL::GL"
+set(CMAKE_OPT_INSTALL TRUE)
+if(COMMAND xpExternPackage)
+  string(JOIN "\n" EXT3
+    "if(NOT TARGET GLEW::GLEW)"
+    "  add_library(GLEW::GLEW ALIAS ${PROJECT_NAME}::glew_s)"
+    "endif()"
     ""
     )
-  xpExternPackage(NAMESPACE ${XP_NAMESPACE} ALIAS_NAMESPACE ${CMAKE_NAMESPACE}
-    TARGETS_FILE ${targetsFile} LIBRARIES ${targets_to_install}
+  xpExternPackage(TARGETS_FILE ${targetsFile}
+    LIBRARIES ${targets_to_install} DEFAULT_TARGETS glew_s
+    CREATE_ALIASES ALIAS_NAMESPACE "GLEW" PKG_CMAKE_USEXT
     BASE ${CMAKE_PROJECT_NAME}-${GLEW_VERSION} XPDIFF "patch"
     WEB "http://glew.sourceforge.net" UPSTREAM "github.com/nigels-com/glew"
     DESC "The OpenGL Extension Wrangler Library"
     LICENSE "[MIT](https://github.com/nigels-com/glew/blob/master/LICENSE.txt 'Modified BSD, Mesa 3D (renamed X11/MIT), Khronos (renamed X11/MIT)')"
     )
-  set(CMAKE_NAMESPACE ${XP_NAMESPACE})
+  set(CMAKE_OPT_INSTALL FALSE)
 elseif(NOT DEFINED CMAKE_INSTALL_CMAKEDIR)
   set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
 endif()
@@ -140,12 +143,11 @@ set (cflags "-DGLEW_MX")
 set (libname ${GLEW_LIB_NAME}mx)
 configure_file (${GLEW_DIR}/glew.pc.in ${GLEW_DIR}/glewmx.pc @ONLY)
 
-option (INSTALL_PKGCONFIG "pkgconfig install" ON)
-if (INSTALL_PKGCONFIG)
-  install(FILES ${GLEW_DIR}/glew.pc ${GLEW_DIR}/glewmx.pc
-          DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig
-  )
-endif ()
+if(CMAKE_OPT_INSTALL)
+install(FILES ${GLEW_DIR}/glew.pc ${GLEW_DIR}/glewmx.pc
+        DESTINATION lib/pkgconfig
+)
+endif() # CMAKE_OPT_INSTALL
 
 install (FILES
     ${GLEW_DIR}/include/GL/wglew.h
@@ -155,9 +157,11 @@ install (FILES
 
 if(MAYBE_EXPORT)
   install(EXPORT ${targetsFile} DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
-    NAMESPACE ${CMAKE_NAMESPACE}::)
+    NAMESPACE ${PROJECT_NAME}::)
+  if(CMAKE_OPT_INSTALL)
   install(FILES
       ${CMAKE_CURRENT_SOURCE_DIR}/glew-config.cmake
       ${CMAKE_CURRENT_SOURCE_DIR}/CopyImportedTargetProperties.cmake
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+  endif() # CMAKE_OPT_INSTALL
 endif()
