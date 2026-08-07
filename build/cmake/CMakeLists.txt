@@ -98,9 +98,8 @@ if(COMMAND xpExternPackage)
     "endif()"
     ""
     )
-  xpExternPackage(TARGETS_FILE ${targetsFile}
+  xpExternPackage(TARGETS_FILE ${targetsFile} ALIAS_NAMESPACE "GLEW"
     LIBRARIES ${targets_to_install} DEFAULT_TARGETS glew_s
-    CREATE_ALIASES ALIAS_NAMESPACE "GLEW" PKG_CMAKE_USEXT
     BASE ${CMAKE_PROJECT_NAME}-${GLEW_VERSION} XPDIFF "patch"
     WEB "http://glew.sourceforge.net" UPSTREAM "github.com/nigels-com/glew"
     DESC "The OpenGL Extension Wrangler Library"
